@@ -64,10 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', openModal);
     });
 
-    modalCloseBtn.addEventListener('click', closeModal);
+    // modalCloseBtn.addEventListener('click', closeModal);
 
     modal.addEventListener('click', (e) => {         //закрывает окно при клике на подложку
-        if(e.target === modal && e.target !== modalDialog) {
+        if(e.target === modal /*&& e.target !== modalDialog*/ || e.target.getAttribute('data-close')==="") {
             closeModal();
         }
     }); 
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('scroll', showModalByScroll);
 
-//Classes for cards
+//Классы для карточек
 
 class MenuCards {
     constructor(src, alt, title, descr, price, parentSelector, ...classes) {
@@ -227,4 +227,87 @@ eliteCard.render();
 
     setClock('.timer', deadline);
 
-});
+//Send users form
+
+    const forms = document.querySelectorAll('form');
+    console.log(forms);
+    const messages = {
+        // loading: 'Still loading',
+        loading: "img/form/spinner.svg",
+        success: 'Thank you, we will connect with you as soon as it possible!',
+        failure: 'It is something wrong...'
+    };
+
+    forms.forEach((item) => {
+        postData(item);
+    });
+    
+    function postData(form) {
+        form.addEventListener('submit', (e) => {
+            console.log('submited');
+            e.preventDefault();
+
+            // const statusMessage = document.createElement('div');
+            const statusMessage = document.createElement('img');   //для использования спиннера
+            statusMessage.src = messages.loading;
+            statusMessage.style.CSSText = `
+                            display: block;
+                            margin: 0 auto;
+                            `;
+            // form.append(statusMessage);
+            form.insertAdjacentElement('afterend', statusMessage);
+
+            const request = new XMLHttpRequest();
+            request.open('POST', 'server.php');
+
+            request.setRequestHeader('Content-type', 'application/json');        //для JSON
+            // request.setRequestHeader('Content-type', 'multipart/form-data');//для FormData
+        //форматирование данных формы для отправки на сервер
+            const formData = new FormData(form);    //для правильной работы FormData в 
+                                                    //inputs & options формы ВСЕГДА должен
+                                                    //быть указан атрибут "name" !!!
+            const object = {};
+            formData.forEach(function (value, key) {
+                object[key] = value;
+            });
+            const json = JSON.stringify(object);
+
+            // request.send(formData);             //отправка данных FormData
+            request.send(json);                 //отправка данных JSON
+
+            request.addEventListener('load', () => {
+                if(request.status === 200) {     //если запрос успешен - 200
+                    console.log(request.response);
+                    showThanksModal(messages.success);
+                    form.reset();                   //очистка полей формы
+                    statusMessage.remove();     //удалить сообщение об отправке
+                } else {
+                    showThanksModal(messages.failure);
+                }
+            });
+        });
+    }
+    //изменение модального окна после отправки формы
+    function showThanksModal(message) {
+        const prevModalDialog = document.querySelector('.modal__dialog');
+        prevModalDialog.classList.add('hide');
+        openModal();
+
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
+            <div class='modal__content'>
+                <div class='modal__close' data-close>&times;</div>
+                <div class='modal__title'>${message}</div>
+            </div>`;
+
+        document.querySelector('.modal').append(thanksModal);
+        setTimeout(() => {
+            thanksModal.remove();
+            prevModalDialog.classList.remove('hide');
+            prevModalDialog.classList.add('show');
+            closeModal();
+        }, 6000);
+    }
+
+ });
