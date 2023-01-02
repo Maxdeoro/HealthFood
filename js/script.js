@@ -308,4 +308,7 @@ eliteCard.render();
         }, 6000);
     }
 
+    fetch('http://localhost:3000/menu')  //start into localhost!!!
+        .then(data => data.json())       //and start json-server
+        .then(result => console.log(result));  //npx json-server db.json
  });
