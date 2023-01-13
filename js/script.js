@@ -164,12 +164,27 @@ const getResource = async (url) => {
 //     });
 // }
 
-getResource('http://localhost:3000/menu')       //запрос данных из db.json на сервере
-.then(data => {                                 //и их обработка конструктором MenuCard и render
-    data.forEach(obj => {                       //для создания карточек меню
-        new MenuCard(obj.img, obj.altimg, obj.title, obj.descr, obj.price, '.menu .container').render();
+//AXIOS.GET
+
+const getData = async (url) => {
+    const response = await axios.get(url)
+.then(data => {/*console.log(data);*/
+    data.data.forEach(({img, altimg, title, descr, price}) => {
+        new MenuCard(img, altimg, title, descr, price, '.menu .container').render();
     });
+})
+.catch(err => {
+    console.log(err);
 });
+};
+getData('http://localhost:3000/menu');
+
+// getResource('http://localhost:3000/menu')       //запрос данных из db.json на сервере
+// .then(data => {                                 //и их обработка конструктором MenuCard и render
+//     data.forEach(obj => {                       //для создания карточек меню
+//         new MenuCard(obj.img, obj.altimg, obj.title, obj.descr, obj.price, '.menu .container').render();
+//     });
+// });
 //===
 // getResource('http://localhost:3000/menu')       //запрос данных из db.json на сервере
 // .then(data => {                                 //и их обработка конструктором MenuCard и render
@@ -234,7 +249,7 @@ getResource('http://localhost:3000/menu')       //запрос данных из
 
     setClock('.timer', deadline);
 
-//Send users form
+//Send users form by FETCH
 
     const forms = document.querySelectorAll('form');
     console.log(forms);
@@ -244,14 +259,14 @@ getResource('http://localhost:3000/menu')       //запрос данных из
         failure: 'It is something wrong...'
     };
 
-    const postData = async (url, data) => {    //async указывает на асинхронный код в ф-ции
-        const res = await fetch(url, {         //await приостанавливает выполнение js до завершения запроса на сервер
-            method: 'POST',
-            headers: {'Content-type': 'application/json'},   //при отправке formData headers не нужен
-            body: data
-        });
-        return await res.json();
-    };
+    // const postData = async (url, data) => {    //async указывает на асинхронный код в ф-ции
+    //     const res = await fetch(url, {         //await приостанавливает выполнение js до завершения запроса на сервер
+    //         method: 'POST',
+    //         headers: {'Content-type': 'application/json'},   //при отправке formData headers не нужен
+    //         body: data
+    //     });
+    //     return await res.json();
+    // };
 
     forms.forEach((item) => {
         bindPostData(item);
@@ -262,7 +277,6 @@ getResource('http://localhost:3000/menu')       //запрос данных из
             console.log('submited');
             e.preventDefault();
 
-            // const statusMessage = document.createElement('div');
             const statusMessage = document.createElement('img');   //для использования спиннера
             statusMessage.src = messages.loading;
             statusMessage.style.CSSText = `
@@ -287,18 +301,41 @@ getResource('http://localhost:3000/menu')       //запрос данных из
             //     headers: {'Content-type': 'application/json'},   //при отправке formData headers не нужен
             //     body: JSON.stringify(object)
             // })
-            postData('http://localhost:3000/requests', json/*JSON.stringify(object)*/)
-            // .then(data => data.text())
-            .then((data) => {
-                   console.log(data);
-                   showThanksModal(messages.success);
-                   form.reset();                   
-                   statusMessage.remove();   
-            }).catch(() => {
-                showThanksModal(messages.failure);
-            }).finally(() => {
-                form.reset();
-            });
+            // postData('http://localhost:3000/requests', json/*JSON.stringify(object)*/)
+            // // .then(data => data.text())
+            // .then((data) => {
+            //        console.log(data);
+            //        showThanksModal(messages.success);
+            //        form.reset();                   
+            //        statusMessage.remove();   
+            // }).catch(() => {
+            //     showThanksModal(messages.failure);
+            // }).finally(() => {
+            //     form.reset();
+            // });
+//AXIOS.POST
+            const axiosPostData = async (url, datas) => {
+                const response = await axios.post(url, datas)
+                .then(data => {
+                    console.log(data);
+                    showThanksModal(messages.success);
+                    form.reset();                   
+                    statusMessage.remove();  
+                })
+                .catch(() => {
+                    showThanksModal(messages.failure);
+                })
+                .finally(() => {
+                    form.reset();
+                });
+            };
+
+            axiosPostData('http://localhost:3000/requests', json);
+
+        // axios.post('http://localhost:3000/requests', json)
+        // .then((data) => {
+        //     console.log(data);
+        // });
 
             // request.send(formData);             //отправка данных FormData
             // request.send(json);                 //отправка данных JSON
