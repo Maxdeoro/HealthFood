@@ -1,4 +1,5 @@
-"use strict";
+/*jshint esversion: 8*/
+// "use strict";
 document.addEventListener('DOMContentLoaded', () => {
 //Tabs
     const tabs = document.querySelectorAll('.tabheader__item'),
@@ -8,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function hideTabContent() {
         tabsContent.forEach( (item) => {
-            // item.style.display = 'none';
             item.classList.add('hide');
             item.classList.remove('show', 'fade');
         });
@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showTabContent(i = 0) {
-        //  tabsContent[i].style.display = 'block';
         tabsContent[i].classList.add('show', 'fade');
         tabsContent[i].classList.remove('hide');
          tabs[i].classList.add('tabheader__item_active');
@@ -91,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //Классы для карточек
 
-class MenuCards {
+class MenuCard {
     constructor(src, alt, title, descr, price, parentSelector, ...classes) {
         this.src = src;
         this.alt = alt;
@@ -132,44 +131,52 @@ class MenuCards {
                             `;
         this.parent.append(element);
     }
-}
+} 
 
-const vegyCard = new MenuCards("img/tabs/vegy.jpg",
-                                "vegy",
-                                'Menu "Fitness"',
-                                'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-                                8.48,
-                                '.menu .container',
-                                'menu__item');
+//GET MENU DATA FROM SERVER
+const getResource = async (url) => {
+    const res = await fetch(url);
 
-const eliteCard = new MenuCards('img/tabs/elite.jpg',
-                                'elite',
-                                'Menu "Premium"',
-                                'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-                                20.40,
-                                '.menu .container',
-                                'menu__item');
+    if (!res.ok) {                  //если ошибка в результате запроса
+        throw new Error(`Could not fetch ${url}, status: ${res.status}`);
+    }
+    return await res.json();
+};
 
-const postCard = new MenuCards('img/tabs/post.jpg',
-                                'post',
-                                'Menu "Post"',
-                                'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-                                16,
-                                '.menu .container',
-                                'menu__item');
+//creating menuCards without using class MenuCard
+// getResource('http://localhost:3000/menu')
+//     .then(data => createCard(data));
+// function createCard(data) {
+//     data.forEach(({img, altimg, title, descr, price}) => {
+//         const element = document.createElement('div');
+//         element.classList.add('menu_item');
+//         element.innerHTML = `
+//         <img src=${img} alt=${altimg}>
+//         <h3 class="menu__item-subtitle">${title}</h3>
+//         <div class="menu__item-descr">${descr}</div>
+//         <div class="menu__item-divider"></div>
+//         <div class="menu__item-price">
+//             <div class="menu__item-cost">Цена:</div>
+//             <div class="menu__item-total"><span>${price}</span> грн/день</div>
+//         </div>
+//         `;
+//         document.querySelector('.menu .container').append(element);
+//     });
+// }
 
-const myCard = new MenuCards("img/tabs/hamburger.jpg",
-                             "hamburger",
-                             'Menu "Hamburger"', 
-                             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.ДЁШЕВО и ВКУСНО, живи полной жизнью!",
-                             7,
-                             '.menu .container',
-                             'menu__item'
-                             );
-myCard.render();
-vegyCard.render();
-postCard.render();
-eliteCard.render();
+getResource('http://localhost:3000/menu')       //запрос данных из db.json на сервере
+.then(data => {                                 //и их обработка конструктором MenuCard и render
+    data.forEach(obj => {                       //для создания карточек меню
+        new MenuCard(obj.img, obj.altimg, obj.title, obj.descr, obj.price, '.menu .container').render();
+    });
+});
+//===
+// getResource('http://localhost:3000/menu')       //запрос данных из db.json на сервере
+// .then(data => {                                 //и их обработка конструктором MenuCard и render
+//     data.forEach(({img, altimg, title, descr, price}) => {                       //для создания карточек меню
+//         new MenuCard(img, altimg, title, descr, price, '.menu .container').render();
+//     });
+// });
 
 
 //Timer
@@ -230,17 +237,27 @@ eliteCard.render();
 //Send users form
 
     const forms = document.querySelectorAll('form');
+    console.log(forms);
     const messages = {
         loading: "img/form/spinner.svg",
         success: 'Thank you, we will connect with you as soon as it possible!',
         failure: 'It is something wrong...'
     };
 
+    const postData = async (url, data) => {    //async указывает на асинхронный код в ф-ции
+        const res = await fetch(url, {         //await приостанавливает выполнение js до завершения запроса на сервер
+            method: 'POST',
+            headers: {'Content-type': 'application/json'},   //при отправке formData headers не нужен
+            body: data
+        });
+        return await res.json();
+    };
+
     forms.forEach((item) => {
-        postData(item);
+        bindPostData(item);
     });
     
-    function postData(form) {
+    function bindPostData(form) {
         form.addEventListener('submit', (e) => {
             console.log('submited');
             e.preventDefault();
@@ -259,16 +276,19 @@ eliteCard.render();
             const formData = new FormData(form);    //для правильной работы FormData в 
                                                     //inputs & options формы ВСЕГДА должен
                                                     //быть указан атрибут "name" !!!
-            const object = {};
-            formData.forEach(function (value, key) {
-                object[key] = value;
-            });
-
-            fetch('server.php', {
-                method: 'POST',
-                headers: {'Content-type': 'application/json'},   //при отправке formData headers не нужен
-                body: JSON.stringify(object)
-            }).then(data => data.text())
+            // const object = {};
+            // formData.forEach(function (value, key) {
+            //     object[key] = value;
+            // });
+            const json = JSON.stringify(Object.fromEntries(formData.entries()));    //entries превращает объект в массив массивов
+                                                                                    //fromEntries преобразует массив массивов в объект
+            // fetch('server.php', {
+            //     method: 'POST',
+            //     headers: {'Content-type': 'application/json'},   //при отправке formData headers не нужен
+            //     body: JSON.stringify(object)
+            // })
+            postData('http://localhost:3000/requests', json/*JSON.stringify(object)*/)
+            // .then(data => data.text())
             .then((data) => {
                    console.log(data);
                    showThanksModal(messages.success);
@@ -308,7 +328,55 @@ eliteCard.render();
         }, 6000);
     }
 
-    fetch('http://localhost:3000/menu')  //start into localhost!!!
-        .then(data => data.json())       //and start json-server
-        .then(result => console.log(result));  //npx json-server db.json
+    //to start json-server: npx json-server --watch db.json
+
+    // fetch('db.json')
+    fetch('http://localhost:3000/menu')
+        .then(data => data.json())
+        .then(res => console.log(res));
+
+//SLIDER
+const prev = document.querySelector('.offer__slider-prev');
+const next = document.querySelector('.offer__slider-next');
+const slides = document.querySelectorAll('.offer__slide');
+const total = document.querySelector('#total');
+const current = document.querySelector('#current');
+let slideIndex = 1;
+
+showSlides(slideIndex);
+
+if (slides.length < 10) {
+total.textContent = `0${slides.length}`;
+} else {
+    total.textContent = slides.length;
+}
+
+function showSlides(n) {
+    if(n > slides.length) {
+        slideIndex = 1;
+    }
+    if(n < 1) {
+        slideIndex = slides.length;
+    }
+    slides.forEach((item) => {
+        item.style.display = 'none';
+    });
+    slides[slideIndex - 1].style.display = 'block';
+
+    if(slides.length < 10) {
+        current.textContent = `0${slideIndex}`;
+    } else {
+        current.textContent = slideIndex;
+    }
+}
+function plusSlides(n) {
+    showSlides(slideIndex += n);
+    }
+    prev.addEventListener('click', () => {
+        plusSlides(-1);
+    });
+    next.addEventListener('click', () => {
+        plusSlides(1);
+    });
+
  });
