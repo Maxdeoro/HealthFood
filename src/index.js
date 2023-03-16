@@ -1,6 +1,8 @@
 /*jshint esversion: 8*/
  "use strict";
 
+ import 'polyfill-nodelist-foreach';
+
 import calculator from './modules/calculator';
 import cardsClasses from './modules/cardsClasses';
 import modal from './modules/modal';
@@ -36,6 +38,6 @@ const modalTimer = setTimeout(() => openModal('.modal', modalTimer), 30000);    
         field: '.offer__slider-inner'
     });
     tabs('.tabheader__item', '.tabcontent', '.tabheader__items', 'tabheader__item_active');
-    timer();
+    timer('.timer', '2023-05-04');
 
  });

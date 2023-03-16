@@ -1,4 +1,3 @@
-/*jshint esversion: 9*/
 
 //SLIDER
 function slider({container, slide, prevArrow, nextArrow, totalCounter, currentCounter, wrapper, field}) {
